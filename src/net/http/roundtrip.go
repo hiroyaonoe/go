@@ -13,6 +13,7 @@ package http
 //
 // Like the RoundTripper interface, the error types returned
 // by RoundTrip are unspecified.
+// TransportのRoundTripper実装
 func (t *Transport) RoundTrip(req *Request) (*Response, error) {
 	return t.roundTrip(req)
 }

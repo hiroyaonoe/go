@@ -139,6 +139,7 @@ type RoundTripper interface {
 	// must arrange to wait for the Close call before doing so.
 	//
 	// The Request's URL and Header fields must be initialized.
+	// これの実態探す
 	RoundTrip(*Request) (*Response, error)
 }
 
@@ -167,12 +168,14 @@ func refererForURL(lastReq, newReq *url.URL) string {
 }
 
 // didTimeout is non-nil only if err != nil.
+// ONOE
 func (c *Client) send(req *Request, deadline time.Time) (resp *Response, didTimeout func() bool, err error) {
 	if c.Jar != nil {
 		for _, cookie := range c.Jar.Cookies(req.URL) {
 			req.AddCookie(cookie)
 		}
 	}
+	// ONOE: c.transport() がRoundTripper
 	resp, didTimeout, err = send(req, c.transport(), deadline)
 	if err != nil {
 		return nil, didTimeout, err
@@ -192,6 +195,7 @@ func (c *Client) deadline() time.Time {
 	return time.Time{}
 }
 
+// ONOE
 func (c *Client) transport() RoundTripper {
 	if c.Transport != nil {
 		return c.Transport
@@ -201,6 +205,7 @@ func (c *Client) transport() RoundTripper {
 
 // send issues an HTTP request.
 // Caller should close resp.Body when done reading from it.
+// ONOE
 func send(ireq *Request, rt RoundTripper, deadline time.Time) (resp *Response, didTimeout func() bool, err error) {
 	req := ireq // req is either the original request, or a modified fork
 
@@ -249,6 +254,7 @@ func send(ireq *Request, rt RoundTripper, deadline time.Time) (resp *Response, d
 	}
 	stopTimer, didTimeout := setRequestCancel(req, rt, deadline)
 
+	// ONOE: 実態はRoundTrip?
 	resp, err = rt.RoundTrip(req)
 	if err != nil {
 		stopTimer()
@@ -445,6 +451,7 @@ func basicAuth(username, password string) string {
 //
 // To make a request with a specified context.Context, use NewRequestWithContext
 // and DefaultClient.Do.
+// ONOE: ここから潜っていく
 func Get(url string) (resp *Response, err error) {
 	return DefaultClient.Get(url)
 }
@@ -472,6 +479,7 @@ func Get(url string) (resp *Response, err error) {
 //
 // To make a request with a specified context.Context, use NewRequestWithContext
 // and Client.Do.
+// ONOE:DefaultClientはClientのインスタンス
 func (c *Client) Get(url string) (resp *Response, err error) {
 	req, err := NewRequest("GET", url, nil)
 	if err != nil {
@@ -578,6 +586,7 @@ func urlErrorOp(method string) string {
 //
 // Any returned error will be of type *url.Error. The url.Error
 // value's Timeout method will report true if the request timed out.
+// ONOE
 func (c *Client) Do(req *Request) (*Response, error) {
 	return c.do(req)
 }
@@ -713,6 +722,7 @@ func (c *Client) do(req *Request) (retres *Response, reterr error) {
 		reqs = append(reqs, req)
 		var err error
 		var didTimeout func() bool
+		// ONOE: ここでsend
 		if resp, didTimeout, err = c.send(req, deadline); err != nil {
 			// c.send() always closes req.Body
 			reqBodyClosed = true
